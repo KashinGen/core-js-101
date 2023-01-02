@@ -24,9 +24,7 @@
  *
  */
 function getComposition(f, g) {
-  return function (x) {
-    return f(g(x));
-  };
+  return (x) => f(g(x));
 }
 
 
@@ -47,9 +45,7 @@ function getComposition(f, g) {
  *
  */
 function getPowerFunction(exponent) {
-  return function (x) {
-    return x ** exponent;
-  };
+  return (x) => x ** exponent;
 }
 
 
@@ -73,13 +69,9 @@ function getPolynom(...args) {
         return args[0];
       };
     case (2):
-      return function (x) {
-        return args[0] * x + args[1];
-      };
+      return (x) => args[0] * x + args[1];
     case (3):
-      return function (x) {
-        return args[0] * x ** 2 + args[1] * x + args[2];
-      };
+      return (x) => args[0] * x ** 2 + args[1] * x + args[2];
     default:
       return null;
   }
