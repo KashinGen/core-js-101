@@ -117,36 +117,69 @@ function fromJSON(proto, json) {
 class SelectorChain {
   constructor() {
     this.selectorChain = '';
-    this.isCombined = false;
+    this.idCount = 0;
+    this.elementCount = 0;
+    this.pseudoElementCount = 0;
+    this.selectorOrder = 0;
+  }
+
+  checkSelectorsOrder(currentOrder) {
+    if (this.selectorOrder > currentOrder) {
+      throw new Error('Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element');
+    }
+  }
+
+  checkOccurence() {
+    if (this.idCount > 1 || this.pseudoElementCount > 1 || this.elementCount > 1) {
+      throw new Error('Element, id and pseudo-element should not occur more then one time inside the selector');
+    }
   }
 
   element(value) {
+    this.elementCount += 1;
+    this.checkOccurence();
+    this.checkSelectorsOrder(1);
     this.selectorChain += String(value);
+    this.selectorOrder = 1;
     return this;
   }
 
   id(value) {
+    this.idCount += 1;
+    this.checkOccurence();
+    this.checkSelectorsOrder(2);
     this.selectorChain += `#${value}`;
+    this.selectorOrder = 2;
     return this;
   }
 
   class(value) {
+    this.checkSelectorsOrder(3);
     this.selectorChain += `.${value}`;
+    this.selectorOrder = 3;
     return this;
   }
 
   attr(value) {
+    this.checkSelectorsOrder(4);
     this.selectorChain += `[${value}]`;
+    this.selectorOrder = 4;
     return this;
   }
 
   pseudoClass(value) {
+    this.checkSelectorsOrder(5);
     this.selectorChain += `:${value}`;
+    this.selectorOrder = 5;
     return this;
   }
 
   pseudoElement(value) {
+    this.checkSelectorsOrder(6);
+    this.pseudoElementCount += 1;
+    this.checkOccurence();
     this.selectorChain += `::${value}`;
+    this.selectorOrder = 6;
     return this;
   }
 
@@ -163,50 +196,13 @@ class SelectorChain {
 }
 
 const cssSelectorBuilder = {
-  chain: new SelectorChain(),
-
-  element(value) {
-    this.selectorChain += String(value);
-    return this;
-  },
-
-  id(value) {
-    this.selectorChain += `#${value}`;
-    return this;
-  },
-
-  class(value) {
-    this.selectorChain += `.${value}`;
-    return this;
-  },
-
-  attr(value) {
-    this.selectorChain += `[${value}]`;
-    return this;
-  },
-
-  pseudoClass(value) {
-    this.selectorChain += `:${value}`;
-    return this;
-  },
-
-  pseudoElement(value) {
-    this.selectorChain += `::${value}`;
-    return this;
-  },
-
-  combine(selector1, combinator, selector2) {
-    this.isCombined = true;
-    this.left = selector1.selectorChain;
-    this.right = selector2.selectorChain;
-    this.selectorChain = `${selector1.selectorChain} ${combinator} ${selector2.selectorChain}`;
-    return this;
-  },
-  stringify() {
-    // const selector = this.selectorChain;
-    this.selectorChain = '';
-    return this;
-  },
+  element: (value) => new SelectorChain().element(value),
+  id: (value) => new SelectorChain().id(value),
+  class: (value) => new SelectorChain().class(value),
+  attr: (value) => new SelectorChain().attr(value),
+  pseudoClass: (value) => new SelectorChain().pseudoClass(value),
+  pseudoElement: (value) => new SelectorChain().pseudoElement(value),
+  combine: (s1, combinator, s2) => new SelectorChain().combine(s1, combinator, s2),
 };
 
 
